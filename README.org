@@ -1,0 +1,771 @@
+* transient-compile
+
+#+BEGIN: om-readme-toc
+- [[#installation][Installation]]
+- [[#basic-usage][Basic usage]]
+- [[#main-function][Main function]]
+- [[#local-variables][Local variables]]
+- [[#custom-faces][Custom faces]]
+- [[#custom-variables][Custom variables]]
+- [[#authors][Authors]]
+- [[#license][License]]
+#+END:
+
+=transient-compile= implements configurable, automatically built [[https://github.com/magit/transient][transient]] menu for interactive selection of the compilation target.
+
+Basically, you need just one command, =M-x transient-compile=. It searches for known build files in current directory and parents, retrieves available targets, groups targets by common prefixes, and displays a menu. After you select the target, it formats command and passed it to =compile= function.
+
+Tools supported out of the box:
+
+- POSIX make
+- [[https://github.com/ruby/rake][rake]]
+- [[https://github.com/casey/just][just]]
+- [[https://github.com/go-task/task][task]]
+- [[https://github.com/pydoit/doit][doit]]
+
+Example of =M-x transient-compile= in project using =doit=:
+
+[[./screenshot/roc_droid.png]]
+
+Example of =M-x transient-compile= in project using =just=:
+
+[[./screenshot/roc_toolkit.png]]
+
+** Installation
+
+Elisp dependencies that are not part of emacs:
+
+- [[https://github.com/rejeep/f.el][f.el]]
+- [[https://github.com/magnars/s.el][s.el]]
+
+Package was tested on Emacs 29.2 on Linux.
+
+Instructions for straight.el:
+
+#+BEGIN_EXAMPLE emacs-lisp
+  (straight-use-package 'f)
+  (straight-use-package 's)
+
+  (straight-use-package
+   '(transient-compile
+    :type git
+    :host github
+    :repo "gavv/transient-compile"
+    :branch "main"))
+#+END_EXAMPLE
+
+** Basic usage
+
+For a typical use case, no configuration is needed. Just run =M-x transient-compile= from a buffer inside your project.
+
+*** Using with project.el or projectile
+
+If you're using project.el or projectile, you may want to set =transient-compile-function= to ='project-compile= instead of ='compile=.
+
+#+BEGIN_EXAMPLE emacs-lisp
+  (custom-set-variables
+    '(transient-compile-function 'project-compile)
+    )
+#+END_EXAMPLE
+
+*** Configuring existing tools
+
+You can configure tools via =transient-compile-tool-alist=, for example to change =make= command to =gmake=, you can use:
+
+#+BEGIN_EXAMPLE emacs-lisp
+  (let ((make (assoc 'make transient-compile-tool-alist)))
+    (setcdr make (plist-put (cdr make) :exe "gmake")))
+#+END_EXAMPLE
+
+*** Registering new tools
+
+You can also use =transient-compile-tool-alist= to register you own tools:
+
+#+BEGIN_EXAMPLE emacs-lisp
+  (add-to-list 'transient-compile-tool-alist
+               '(foo :match ("Foofile" "foofile")
+                      :exe "foo"
+                      :chdir t
+                      :targets #'foofile-targets
+                      :command #'foofile-command))
+#+END_EXAMPLE
+
+Example above instructs =transient-compile= to use =foo= tool when it founds "Foofile" or "foofile" in current directory or one of its parents.
+
+You'll need to implement two functions:
+
+- =:targets= - to retrieve list of targets
+- =:command= - to format build command after user selects a target
+
+See documentation for =transient-compile-tool-alist= for futher details.
+
+*** Overriding auto-detection
+
+By default, =transient-compile= automatically detects build tool and directory by searching current directory (as defined by =default-directory=) and its parents.
+
+You can force it to use specific tool or directory by setting variables =transient-compile-tool= and =transient-compile-directory=. It may be handy to set them via =.dir-locals.el= or file local variables.
+
+*** Further customizations
+
+You can override almost every aspect of the default behavior (grouping, sorting, assigning key characters, etc) by toggling various flags or registering custom functions.
+
+See section below for the full list of custom variables.
+
+*** Troubleshooting
+
+You can enable verbose logging (to messages) using:
+
+#+BEGIN_EXAMPLE emacs-lisp
+  (setq transient-compile-verbose t)
+#+END_EXAMPLE
+
+** Main function
+
+=transient-compile= is the main entry point of the package.
+
+#+BEGIN: om-readme-symbol :symbol transient-compile
+*** transient-compile
+Open transient menu for compilation.
+
+The following steps are performed:
+
+ - Build tool and directory is detected. See =transient-compile-tool-alist=
+   and =transient-compile-detect-function=.
+
+ - Available targets are collected according to the =:targets= function
+   of the selected tool from =transient-compile-tool-alist=.
+
+ - Targets are organized into groups. See =transient-compile-group-function=,
+   =transient-compile-split-function=, =transient-compile-sort-function= and
+   other related options.
+
+ - For each target, a unique key sequence is assigned. See
+   =transient-compile-keychar-function= and other related options.
+
+ - Transient menu is built. See =transient-compile-menu-heading-function= and
+   =transient-compile-menu-columns-function= for altering its appearance.
+
+ - Transient menu is opened. Now we wait until selects target using its
+   key sequence, or cancels operation.
+
+ - After user have selected target, compilation command is formatted using
+   =:command= function of the selected tool from =transient-compile-tool-alist=.
+
+ - Formatted command is padded to =compile=, or =project-compile=, or other
+   function. See =transient-compile-function=.
+
+After that, =transient-compile= closes menu and returns, while the command
+keeps running in the compilation buffer.
+#+END:
+
+** Local variables
+
+The following local variables are designed to be bound during the call to =transient-compile=.
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-tool
+*** transient-compile-tool
+Currently active compilation tool.
+
+This variable is holding a symbol key from =transient-compile-tool-alist=
+(like 'make).
+
+Normally, =transient-compile= automatically detects tool and directory and binds
+=transient-compile-tool= and =transient-compile-directory= during the call.
+
+If desired, you can manually bind one or both of the variables before calling
+=transient-compile= to force using of specific tool and/or directory.
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  nil
+#+END_EXAMPLE
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-directory
+*** transient-compile-directory
+Currently active compilation directory.
+
+This variable is holding a directory path with the tool-specific build file
+(e.g. for 'make it's the directory with Makefile).
+
+Normally, =transient-compile= automatically detects tool and directory and binds
+=transient-compile-tool= and =transient-compile-directory= during the call.
+
+If desired, you can manually bind one or both of the variables before calling
+=transient-compile= to force using of specific tool and/or directory.
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  nil
+#+END_EXAMPLE
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-target
+*** transient-compile-target
+Currently active compilation target.
+
+After the user selects target in transient menu, =transient-compile= binds this
+variable to the selected target during the call to =transient-compile-function=
+(In addition to =transient-compile-tool= and =transient-compile-directory=).
+
+It may be useful if you provide your own compilation function.
+Setting this variable manually has no effect.
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  nil
+#+END_EXAMPLE
+#+END:
+
+** Custom faces
+
+In addition to standard transient faces, =transient-compile= adds a couple of its own.
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-heading
+*** transient-compile-heading
+Face used for transient menu heading.
+Applied by =transient-compile-default-menu-heading-function=.
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  '((t :inherit font-lock-builtin-face))
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-keychar
+*** transient-compile-keychar
+Face to highlight key character inside group or target name.
+Applied if =transient-compile-keychar-highlight= is t.
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  '((t :inherit font-lock-string-face :underline t))
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+** Custom variables
+
+This section provides the full list of supported custom variables. They allow significant changes in =transient-compile= behavior, such as algorithms for detecting build tool, grouping and sorting of targets, choosing key characters for transient menu, arranging items on screen, etc.
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-function
+*** transient-compile-function
+Function to run compilation command.
+
+You can set it to =project-compile= if you're using =project=
+or =projectile=.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (choice
+   (const :tag "compile" compile)
+   (const :tag "project-compile" project-compile)
+   function)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  #'compile
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-verbose
+*** transient-compile-verbose
+Print what's happening to messages.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (boolean)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  nil
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-tool-alist
+*** transient-compile-tool-alist
+Assoc list of supported tools.
+
+Alist key is a symbol, e.g. 'make.
+Alist value is a plist with the following fields:
+#+BEGIN_EXAMPLE
+  :match - list of file names or functions for auto-detection (see below)
+  :exe - executable name or path
+  :chdir - whether to change directory when running
+  :targets - function to get list of targets
+  :command - function to format build command
+#+END_EXAMPLE
+
+When you invoke =transient-compile=, it performs a search from the current
+directory through the parents, until it finds a match with any of the
+commands registered in =transient-compile-tool-alist=.
+
+A command is matched if any of the elements in its =:match= list is matched:
+ - If an element is a string, it matches if the directory contains a file
+   with that name.
+ - If an element is a function, then the function is invoked with the
+   directory path, and the element matches if it returned non-nil.
+
+=:match= can be also just a string or a function, which is equivalent to
+a single-element list.
+
+If multiple tools can be matched, the order of =transient-compile-tool-alist=
+keys defines their precedence.
+
+After a command is matched, it is used to collect targets, build the
+transient menu, and run the compilation command.
+
+The =:targets= property defines a function that takes the matched directory
+path as an argument (e.g. where Makefile is located in case of =make=), and
+returns the list of string names of the available targets.
+
+The =:command= property defines a function that takes two arguments: the
+matched directory and the target name. It returns a string with the command
+to run. The command is then passed to =compile= (or other function, as
+defined by =transient-compile-function=).
+
+=:exe= and =:chdir= properties are used by the default implementations of
+the functions set in =:targets= and =:command= properties, e.g.
+=transient-compile-makefile-targets= and =transient-compile-makefile-command=.
+
+=:exe= is useful when the tool is not available in PATH or is named
+differently on your system.
+
+=:chdir= defines how to pass matched directory path to the tool:
+  - when t, we'll run the tool from that directory
+  - when nil, we'll instead pass the directory as an argument
+    (=:command= function should do it)
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (sexp)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  `(
+      ;; https://github.com/go-task/task
+      (task :match ,(lambda (directory)
+                      (seq-some (lambda (f)
+                                  (string-match "^[Tt]askfile\\(\\.dist\\)?\\.ya?ml$" f))
+                          (directory-files directory)))
+            :exe "task"
+            :chdir t
+            :targets transient-compile-taskfile-targets
+            :command transient-compile-taskfile-command)
+      ;; https://github.com/casey/just
+      (just :match ,(lambda (directory)
+                      (or (member-ignore-case "justfile" (directory-files directory))
+                          (member-ignore-case ".justfile" (directory-files directory))))
+            :exe "just"
+            :chdir t
+            :targets transient-compile-justfile-targets
+            :command transient-compile-justfile-command)
+      ;; https://github.com/pydoit/doit
+      (doit :match ("dodo.py")
+            :exe "doit"
+            :chdir t
+            :targets transient-compile-dodofile-targets
+            :command transient-compile-dodofile-command)
+      ;; https://github.com/ruby/rake
+      (rake :match ("Rakefile" "rakefile" "Rakefile.rb" "rakefile.rb")
+            :exe "rake"
+            :chdir t
+            :targets transient-compile-rakefile-targets
+            :command transient-compile-rakefile-command)
+      ;; any POSIX-compliant make
+      (make :match ("GNUmakefile" "BSDmakefile" "makefile" "Makefile")
+            :exe "make"
+            :chdir t
+            :targets transient-compile-makefile-targets
+            :command transient-compile-makefile-command)
+      )
+#+END_EXAMPLE
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-detect-function
+*** transient-compile-detect-function
+Function that detects compilation tool and directory.
+
+Should take no arguments and return a cons, where car is the tool (symbol key
+from =transient-compile-tool-alist=), and cdr is directory path.
+
+Default implementation is based on =:match= lists defined in
+=transient-compile-tool-alist= for each tool.
+
+For most cases, it should be enough to modify =transient-compile-tool-alist= and
+there is no need to redefine this function.
+
+You can also temporary bind local variables =transient-compile-tool= and/or
+=transient-compile-directory= instead of redefining this function.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (function)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  #'transient-compile-default-detect-function
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-group-fallback
+*** transient-compile-group-fallback
+The name of the fallback group for targets without group.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (string)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  "default"
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-group-regexp
+*** transient-compile-group-regexp
+Regexp to match group name from target name.
+Group name should be captured by the first parenthesized sub-expression.
+Used by =transient-compile-default-group-function=.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (string)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  "^\\(.+\\)[^[:alnum:]][​[:alnum:]]+$"
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-group-function
+*** transient-compile-group-function
+Function that takes target name and returns group name.
+If it returns nil, fallback group is used (=transient-compile-group-fallback=).
+
+Default implementation uses =transient-compile-group-regexp=.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (function)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  #'transient-compile-default-group-function
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-split-function
+*** transient-compile-split-function
+Function that takes list of targets names and returns assoc list, where key is
+group name, and value is list of target names in this group.
+
+Default implementation uses =transient-compile-group-function= with some
+reasonable heuristics.
+
+For most customizations, it should be enough to override either
+=transient-compile-group-regexp= or =transient-compile-group-function=.
+
+Providing custom =transient-compile-split-function= is useful when you need
+custom groupping logic that takes into account all available targets.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (function)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  #'transient-compile-default-split-function
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-sort-function
+*** transient-compile-sort-function
+Function that takes assoc list returned by =transient-compile-split-function=,
+and returns its sorted version.
+
+The function is allowed to sort both groups and targets inside groups.
+
+Default implementation sorts groups alphabetically, does not sort targets, and places
+fallback group first.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (function)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  #'transient-compile-default-sort-function
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-merge-prefix-targets
+*** transient-compile-merge-prefix-targets
+If non-nil, if a target doesn't have a group, and target name is a prefix
+of a group name, move target into that group.
+
+Has effect only if you're using =transient-compile-default-split-function=.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (boolean)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  t
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-merge-prefix-groups
+*** transient-compile-merge-prefix-groups
+If non-nil, if a group has no more than specified number of targets, and there
+is another group which name is the prefix of the first one, move targets into
+that prefix group.
+
+Has effect only if you're using =transient-compile-default-split-function=.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (integer)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  1
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-merge-dangling-groups
+*** transient-compile-merge-dangling-groups
+If non-nil, if a group has no more than given number of targets, move
+targets into fallback group.
+
+Has effect only if you're using =transient-compile-default-split-function=.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (integer)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  1
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-keychar-highlight
+*** transient-compile-keychar-highlight
+If non-nil, highlight key characters inside group and target names with
+=transient-compile-keychar= face.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (boolean)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  t
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-keychar-unfold
+*** transient-compile-keychar-unfold
+If non-nil, allow using upcase and downcase variants of the original
+character as the key character.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (boolean)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  t
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-keychar-regexp
+*** transient-compile-keychar-regexp
+Regexp for allowed key characters.
+Only those characters in group and target names, which match this regex,
+can become key characters.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (boolean)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  "[​[:alnum:]]"
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-keychar-function
+*** transient-compile-keychar-function
+Custom function that chooses unique key character for a word.
+
+The function should take 3 arguments:
+  - name - group or target name for which we choose a key
+  - all-names - list of all names, among which the key must be unique
+  - key-map - hashtable of taken keys
+  - group-p - whether it's group or target
+
+The function should return character to be used as a key.
+Character must not be taken by other words (other groups
+or other targets in group), i.e. it must not be present
+in the key-map.
+
+The function can return nil if it doesn't have a good key.
+In this case default algorithm is used for this word.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (function)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  nil
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-menu-heading-function
+*** transient-compile-menu-heading-function
+Function that returns menu heading.
+
+Takes 2 arguments:
+  - tool - symbol key from =transient-compile-tool-alist=, e.g. 'make
+  - directory - path to dir where command will be executed
+
+Returns propertized string heading or nil to hide heading.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (function)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  #'transient-compile-default-menu-heading-function
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-menu-columns-limit
+*** transient-compile-menu-columns-limit
+If non-nil, limits maximum allowed number of menu columns.
+Used by =transient-compile-default-menu-columns-function=.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (integer)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  nil
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+#+BEGIN: om-readme-symbol :symbol transient-compile-menu-columns-function
+*** transient-compile-menu-columns-function
+Function that returns menu column count.
+
+Takes assoc list returned by =transient-compile-split-function=.
+Returns desired number of columns.
+
+=transient-compile= will arange groups into N columns by inserting
+a break after each Nth group.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (function)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  #'transient-compile-default-menu-columns-function
+#+END_EXAMPLE
+
+*Introduced in version:*
+ - 0.1
+#+END:
+
+** Authors
+
+Authors ordered by first contribution:
+
+#+BEGIN: om-readme-authors
+- Victor Gaydov (victor@enise.org)
+#+END:
+
+** License
+
+[[LICENSE][GPLv3+]]
