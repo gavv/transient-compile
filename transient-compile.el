@@ -3,6 +3,7 @@
 ;; Copyright (C) 2025 Victor Gaydov and contributors
 
 ;; Author: Victor Gaydov <victor@enise.org>
+;; Created: 26 Jan 2025
 ;; URL: https://github.com/gavv/transient-compile
 
 ;;; License:
