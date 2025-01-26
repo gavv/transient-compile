@@ -383,6 +383,7 @@ a break after each Nth group."
   :group 'transient-compile
   :type 'function)
 
+;;;###autoload
 (defun transient-compile ()
   "Open transient menu for compilation.
 
