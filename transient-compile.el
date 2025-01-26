@@ -736,7 +736,7 @@ inside groups. Also it always places fallback group first."
                     (push (match-string 1 line) targets))))
               (setq skip-target nil))
             (forward-line 1))))
-      (sort targets 'string<))))
+      (seq-uniq (sort targets 'string<)))))
 
 (defun transient-compile-makefile-command (directory target)
   "Format build command for a makefile."
