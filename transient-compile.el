@@ -45,8 +45,10 @@
 
 (defgroup transient-compile nil
   "Dynamic transient menu for compilation."
+  :prefix "transient-compile-"
   :group 'tools
-  :group 'processes)
+  :group 'processes
+  :link '(url-link "https://github.com/gavv/transient-compile"))
 
 (defcustom transient-compile-function #'compile
   "Function to run compilation command.
@@ -152,7 +154,10 @@ differently on your system.
   - when t, we'll run the tool from that directory
   - when nil, we'll instead pass the directory as an argument
     (`:command' function should do it)
-")
+"
+  :package-version '(transient-compile . "0.1")
+  :group 'transient-compile
+  :type 'sexp)
 
 (defvar-local transient-compile-tool nil
   "Currently active compilation tool.
@@ -218,7 +223,7 @@ Group name should be captured by the first parenthesized sub-expression.
 Used by `transient-compile-default-group-function'."
   :package-version '(transient-compile . "0.1")
   :group 'transient-compile
-  :type 'string)
+  :type 'regexp)
 
 (defcustom transient-compile-group-function #'transient-compile-default-group-function
   "Function that takes target name and returns group name.
@@ -274,7 +279,8 @@ that prefix group.
 Has effect only if you're using `transient-compile-default-split-function'."
   :package-version '(transient-compile . "0.1")
   :group 'transient-compile
-  :type 'integer)
+  :type '(choice (const :tag "Disable" nil)
+                 (integer :tag "Threshold")))
 
 (defcustom transient-compile-merge-dangling-groups 1
   "If non-nil, if a group has no more than given number of targets, move
@@ -283,7 +289,8 @@ targets into fallback group.
 Has effect only if you're using `transient-compile-default-split-function'."
   :package-version '(transient-compile . "0.1")
   :group 'transient-compile
-  :type 'integer)
+  :type '(choice (const :tag "Disable" nil)
+                 (integer :tag "Threshold")))
 
 (defcustom transient-compile-keychar-highlight t
   "If non-nil, highlight key characters inside group and target names with
@@ -305,7 +312,7 @@ Only those characters in group and target names, which match this regex,
 can become key characters."
   :package-version '(transient-compile . "0.1")
   :group 'transient-compile
-  :type 'boolean)
+  :type 'regexp)
 
 (defcustom transient-compile-keychar-function nil
   "Custom function that chooses unique key character for a word.
@@ -325,7 +332,8 @@ The function can return nil if it doesn't have a good key.
 In this case default algorithm is used for this word."
   :package-version '(transient-compile . "0.1")
   :group 'transient-compile
-  :type 'function)
+  :type '(choice (const :tag "Default" nil)
+                 function))
 
 (defface transient-compile-heading
   '((t :inherit font-lock-builtin-face))
@@ -359,7 +367,8 @@ Returns propertized string heading or nil to hide heading."
 Used by `transient-compile-default-menu-columns-function'."
   :package-version '(transient-compile . "0.1")
   :group 'transient-compile
-  :type 'integer)
+  :type '(choice (const :tag "Unlimited" nil)
+                 (integer :tag "Limit")))
 
 (defcustom transient-compile-menu-columns-function
   #'transient-compile-default-menu-columns-function
