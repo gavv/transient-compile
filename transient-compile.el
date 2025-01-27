@@ -822,8 +822,9 @@ Skip nil arguments (but not empty strings)."
 (defun transient-compile--tool-targets (tool directory)
   "Retrieve list of compile targets."
   (if-let* ((targets-fn (transient-compile--tool-property tool :targets))
-            (targets (seq-remove 's-blank-p
-                                 (funcall targets-fn directory))))
+            (targets (seq-uniq
+                      (seq-remove 's-blank-p
+                                  (funcall targets-fn directory)))))
       (progn
         (transient-compile--log
          "Detected %s targets for \"%s\"" (length targets) tool)
