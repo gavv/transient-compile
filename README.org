@@ -775,6 +775,7 @@ Authors ordered by first contribution:
 
 #+BEGIN: om-readme-authors
 - Victor Gaydov (victor@enise.org)
+- Sergio Pastor Pérez (sergio.pastorperez@outlook.es)
 #+END:
 
 ** License
