@@ -29,7 +29,7 @@
 ;; When you invoke `M-x transient-compile', it searches for known build files
 ;; in current directory and parents, retrieves available targets, groups targets
 ;; by common prefixes, and displays a menu. After you select the target, it
-;; formats command and passed it to 'compile or other function.
+;; formats command and passes it to compile or other function.
 
 ;; Please refer to README.org and docstrings for further details.
 
