@@ -1,6 +1,7 @@
 * transient-compile
 
 #+BEGIN: om-readme-toc
+- [[#releases][Releases]]
 - [[#installation][Installation]]
 - [[#basic-usage][Basic usage]]
 - [[#main-function][Main function]]
@@ -30,6 +31,10 @@ Example of =M-x transient-compile= in project using =doit=:
 Example of =M-x transient-compile= in project using =just=:
 
 [[./screenshot/roc_toolkit.png]]
+
+** Releases
+
+Changelog file can be found here: [[./CHANGES.md][changelog]].
 
 ** Installation
 
