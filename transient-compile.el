@@ -600,7 +600,8 @@ inside groups. Also it always places fallback group first."
                                 (seq-mapcat 'cdr groups)))))
          ;; how much columns we can fit
          (max-columns
-          (/ (window-body-width) (+ max-width 10))))
+          (max (/ (window-body-width) (+ max-width 10))
+               1))) ; At least 1 column.
     (if (and transient-compile-menu-columns-limit
              (> transient-compile-menu-columns-limit 0))
         (min transient-compile-menu-columns-limit
