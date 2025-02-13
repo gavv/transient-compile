@@ -760,7 +760,7 @@ inside groups. Also it always places fallback group first."
     (let* ((process-environment
             (cons "LC_ALL=C" process-environment))
            (exit-code
-            (call-process-shell-command command nil (current-buffer) nil)))
+            (process-file-shell-command command nil (current-buffer) nil)))
       (buffer-string))))
 
 (defun transient-compile--shell-quote (arg)
