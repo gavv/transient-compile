@@ -1,6 +1,7 @@
 * transient-compile
 
 #+BEGIN: om-readme-toc
+- [[#synopsys][Synopsys]]
 - [[#releases][Releases]]
 - [[#installation][Installation]]
 - [[#basic-usage][Basic usage]]
@@ -11,6 +12,11 @@
 - [[#authors][Authors]]
 - [[#license][License]]
 #+END:
+
+** Synopsys
+   :PROPERTIES:
+   :CUSTOM_ID: synopsys
+   :END:
 
 =transient-compile= implements configurable, automatically built [[https://github.com/magit/transient][transient]] menu for interactive selection of the compilation target.
 
@@ -33,10 +39,16 @@ Example of =M-x transient-compile= in project using =just=:
 [[./screenshot/roc_toolkit.png]]
 
 ** Releases
+   :PROPERTIES:
+   :CUSTOM_ID: releases
+   :END:
 
 Changelog file can be found here: [[./CHANGES.md][changelog]].
 
 ** Installation
+   :PROPERTIES:
+   :CUSTOM_ID: installation
+   :END:
 
 Elisp dependencies that are not part of emacs:
 
@@ -60,6 +72,9 @@ Instructions for straight.el:
 #+END_EXAMPLE
 
 ** Basic usage
+   :PROPERTIES:
+   :CUSTOM_ID: basic-usage
+   :END:
 
 For a typical use case, no configuration is needed. Just run =M-x transient-compile= from a buffer inside your project.
 
@@ -125,6 +140,9 @@ You can enable verbose logging (to messages) using:
 #+END_EXAMPLE
 
 ** Main function
+   :PROPERTIES:
+   :CUSTOM_ID: main-function
+   :END:
 
 =transient-compile= is the main entry point of the package.
 
@@ -164,6 +182,9 @@ keeps running in the compilation buffer.
 #+END:
 
 ** Local variables
+   :PROPERTIES:
+   :CUSTOM_ID: local-variables
+   :END:
 
 The following local variables are designed to be bound during the call to =transient-compile=.
 
@@ -223,6 +244,9 @@ Setting this variable manually has no effect.
 #+END:
 
 ** Custom faces
+   :PROPERTIES:
+   :CUSTOM_ID: custom-faces
+   :END:
 
 In addition to standard transient faces, =transient-compile= adds a couple of its own.
 
@@ -255,6 +279,9 @@ Applied if =transient-compile-keychar-highlight= is t.
 #+END:
 
 ** Custom variables
+   :PROPERTIES:
+   :CUSTOM_ID: custom-variables
+   :END:
 
 This section provides the full list of supported custom variables. They allow significant changes in =transient-compile= behavior, such as algorithms for detecting build tool, grouping and sorting of targets, choosing key characters for transient menu, arranging items on screen, etc.
 
@@ -775,6 +802,9 @@ a break after each Nth group.
 #+END:
 
 ** Authors
+   :PROPERTIES:
+   :CUSTOM_ID: authors
+   :END:
 
 Authors ordered by first contribution:
 
@@ -784,5 +814,8 @@ Authors ordered by first contribution:
 #+END:
 
 ** License
+   :PROPERTIES:
+   :CUSTOM_ID: license
+   :END:
 
 [[LICENSE][GPLv3+]]
