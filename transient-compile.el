@@ -1089,7 +1089,7 @@ function that takes directory path and returns t or nil."
                              (transient-compile--tool-property tool :chdir)))
                        `(,target-key
                          ,target-label
-                         (lambda () (interactive)
+                         (lambda () "" (interactive)
                            (unless transient-compile-function
                              (user-error "Missing transient-compile-function."))
                            (let ((transient-compile-target ,target-name)
