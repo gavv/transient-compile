@@ -53,6 +53,12 @@
   :group 'processes
   :link '(url-link "https://github.com/gavv/transient-compile"))
 
+(defcustom transient-compile-spread-targets nil
+  "Whether to spread the targets so they span across the window."
+  :package-version '(transient-compile . "0.1")
+  :group 'transient-compile
+  :type 'boolean)
+
 (defcustom transient-compile-function #'compile
   "Function to run compilation command.
 
@@ -1129,8 +1135,7 @@ function that takes directory path and returns t or nil."
 
 (defun transient-compile--build-grid (menu-heading column-count items)
   "Align menu items into a grid."
-  (let* ((column-width (/ (frame-width) column-count))
-         (columns (make-list column-count nil))
+  (let* ((columns (make-list column-count nil))
          (index 0))
     (dolist (item items)
       (setf (nth index columns) (append (nth index columns)
@@ -1143,14 +1148,18 @@ function that takes directory path and returns t or nil."
           (when (< row-index (length (nth col-index columns)))
             (setf (nth row-index rows) (append (nth row-index rows)
                                                (list (nth row-index (nth col-index columns))))))))
-      (append `(:column-widths ',(make-list column-count column-width))
-              (seq-map-indexed (lambda (row index)
-                                 (vconcat
-                                  (append (when (and menu-heading (eq index 0))
-                                            `(:description ,(s-concat menu-heading "\n")))
-                                          (list :class 'transient-columns)
-                                          (seq-map 'vconcat row))))
-                               rows)))))
+      (let ((grid (seq-map-indexed (lambda (row index)
+                                     (vconcat
+                                      (append (when (and menu-heading (eq index 0))
+                                                `(:description ,(s-concat menu-heading "\n")))
+                                              (list :class 'transient-columns)
+                                              (seq-map 'vconcat row))))
+                                   rows)))
+        (if-let ((transient-compile-spread-targets transient-compile-spread-targets)
+                 (column-width (/ (frame-width) column-count)))
+            (append `(:column-widths ',(make-list column-count column-width))
+                    grid)
+          grid)))))
 
 (provide 'transient-compile)
 ;;; transient-compile.el ends here
