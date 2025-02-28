@@ -623,7 +623,7 @@ inside groups.  Also it always places fallback group first."
                                 (seq-mapcat 'cdr groups)))))
          ;; how much columns we can fit
          (max-columns
-          (max (/ (window-body-width) (+ max-width 10))
+          (max (/ (frame-width) (+ max-width 10))
                1))) ; At least 1 column.
     (if (and transient-compile-menu-columns-limit
              (> transient-compile-menu-columns-limit 0))
@@ -1129,7 +1129,7 @@ function that takes directory path and returns t or nil."
 
 (defun transient-compile--build-grid (menu-heading column-count items)
   "Align menu items into a grid."
-  (let* ((column-width (/ (window-body-width) column-count))
+  (let* ((column-width (/ (frame-width) column-count))
          (columns (make-list column-count nil))
          (index 0))
     (dolist (item items)
