@@ -1,5 +1,7 @@
 * transient-compile
 
+[[https://github.com/gavv/transient-compile/actions/workflows/build.yaml][file:https://github.com/gavv/transient-compile/actions/workflows/build.yaml/badge.svg]]
+
 #+BEGIN: om-readme-toc
 - [[#synopsys][Synopsys]]
 - [[#releases][Releases]]
