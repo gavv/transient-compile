@@ -80,6 +80,17 @@ Instructions for straight.el:
 
 For a typical use case, no configuration is needed. Just run =M-x transient-compile= from a buffer inside your project.
 
+*** Editing command before running it
+
+By default, when you select menu entry, =transient-compile-function= runs corresponding compilation command. If you want to edit the command in minibuffer before running it, you can use:
+
+#+BEGIN_EXAMPLE emacs-lisp
+  (custom-set-variables
+    '(transient-compile-function
+       (lambda (command) (call-interactively 'compile command)))
+    )
+#+END_EXAMPLE
+
 *** Using with project.el or projectile
 
 If you're using project.el or projectile, you may want to set =transient-compile-function= to ='project-compile= instead of ='compile=.
