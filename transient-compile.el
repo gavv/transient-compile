@@ -1086,10 +1086,12 @@ function that takes directory path and returns t or nil."
                               directory
                               target-name))
                             (need-chdir
-                             (transient-compile--tool-property tool :chdir)))
+                             (transient-compile--tool-property tool :chdir))
+                            (hint
+                             (format "Run: %s" target-command)))
                        `(,target-key
                          ,target-label
-                         (lambda () "" (interactive)
+                         (lambda () ,hint (interactive)
                            (unless transient-compile-function
                              (user-error "Missing transient-compile-function."))
                            (let ((transient-compile-target ,target-name)
