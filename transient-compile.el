@@ -31,7 +31,7 @@
 
 ;; When you invoke `M-x transient-compile', it searches for known build files
 ;; in current directory and parents, retrieves available targets, groups targets
-;; by common prefixes, and displays a menu. After you select the target, it
+;; by common prefixes, and displays a menu.  After you select the target, it
 ;; formats command and passes it to compile or other function.
 
 ;; Please refer to README.org and docstrings for further details.
@@ -76,7 +76,7 @@ or `projectile'."
     (task :match ,(lambda (directory)
                     (seq-some (lambda (f)
                                 (string-match "^[Tt]askfile\\(\\.dist\\)?\\.ya?ml$" f))
-                        (directory-files directory)))
+                              (directory-files directory)))
           :exe "task"
           :chdir t
           :targets transient-compile-taskfile-targets
@@ -107,10 +107,11 @@ or `projectile'."
           :chdir t
           :targets transient-compile-makefile-targets
           :command transient-compile-makefile-command)
+    ;;
     )
   "Assoc list of supported tools.
 
-Alist key is a symbol, e.g. 'make.
+Alist key is a symbol, e.g. \\='make.
 Alist value is a plist with the following fields:
   :match - list of file names or functions for auto-detection (see below)
   :exe - executable name or path
@@ -142,8 +143,8 @@ path as an argument (e.g. where Makefile is located in case of `make'), and
 returns the list of string names of the available targets.
 
 The `:command' property defines a function that takes two arguments: the
-matched directory and the target name. It returns a string with the command
-to run. The command is then passed to `compile' (or other function, as
+matched directory and the target name.  It returns a string with the command
+to run.  The command is then passed to `compile' (or other function, as
 defined by `transient-compile-function').
 
 `:exe' and `:chdir' properties are used by the default implementations of
@@ -156,8 +157,7 @@ differently on your system.
 `:chdir' defines how to pass matched directory path to the tool:
   - when t, we'll run the tool from that directory
   - when nil, we'll instead pass the directory as an argument
-    (`:command' function should do it)
-"
+    (`:command' function should do it)"
   :package-version '(transient-compile . "0.1")
   :group 'transient-compile
   :type 'sexp)
@@ -166,7 +166,7 @@ differently on your system.
   "Currently active compilation tool.
 
 This variable is holding a symbol key from `transient-compile-tool-alist'
-(like 'make).
+\(like \\='make).
 
 Normally, `transient-compile' automatically detects tool and directory and binds
 `transient-compile-tool' and `transient-compile-directory' during the call.
@@ -178,7 +178,7 @@ If desired, you can manually bind one or both of the variables before calling
   "Currently active compilation directory.
 
 This variable is holding a directory path with the tool-specific build file
-(e.g. for 'make it's the directory with Makefile).
+\(e.g. for \\='make it's the directory with Makefile).
 
 Normally, `transient-compile' automatically detects tool and directory and binds
 `transient-compile-tool' and `transient-compile-directory' during the call.
@@ -191,7 +191,7 @@ If desired, you can manually bind one or both of the variables before calling
 
 After the user selects target in transient menu, `transient-compile' binds this
 variable to the selected target during the call to `transient-compile-function'
-(In addition to `transient-compile-tool' and `transient-compile-directory').
+\(In addition to `transient-compile-tool' and `transient-compile-directory').
 
 It may be useful if you provide your own compilation function.
 Setting this variable manually has no effect.")
@@ -229,7 +229,9 @@ Used by `transient-compile-default-group-function'."
   :type 'regexp)
 
 (defcustom transient-compile-group-function #'transient-compile-default-group-function
-  "Function that takes target name and returns group name.
+  "Function to determine target's group.
+
+Takes target name and returns group name.
 If it returns nil, fallback group is used (`transient-compile-group-fallback').
 
 Default implementation uses `transient-compile-group-regexp'."
@@ -238,7 +240,9 @@ Default implementation uses `transient-compile-group-regexp'."
   :type 'function)
 
 (defcustom transient-compile-split-function #'transient-compile-default-split-function
-  "Function that takes list of targets names and returns assoc list, where key is
+  "Function to divide targets into groups.
+
+Takes list of targets names and returns assoc list, where key is
 group name, and value is list of target names in this group.
 
 Default implementation uses `transient-compile-group-function' with some
@@ -254,19 +258,23 @@ custom groupping logic that takes into account all available targets."
   :type 'function)
 
 (defcustom transient-compile-sort-function #'transient-compile-default-sort-function
-  "Function that takes assoc list returned by `transient-compile-split-function',
+  "Function to sort groups and targets inside groups.
+
+Takes assoc list returned by `transient-compile-split-function',
 and returns its sorted version.
 
 The function is allowed to sort both groups and targets inside groups.
 
-Default implementation sorts groups alphabetically, does not sort targets, and places
-fallback group first."
+Default implementation sorts groups alphabetically, does not sort targets,
+and places fallback group first."
   :package-version '(transient-compile . "0.1")
   :group 'transient-compile
   :type 'function)
 
 (defcustom transient-compile-merge-prefix-targets t
-  "If non-nil, if a target doesn't have a group, and target name is a prefix
+  "Whether to merge group-less targets into larger groups.
+
+If non-nil, if a target doesn't have a group, and target name is a prefix
 of a group name, move target into that group.
 
 Has effect only if you're using `transient-compile-default-split-function'."
@@ -275,7 +283,9 @@ Has effect only if you're using `transient-compile-default-split-function'."
   :type 'boolean)
 
 (defcustom transient-compile-merge-prefix-groups 1
-  "If non-nil, if a group has no more than specified number of targets, and there
+  "Whether to merge small groups into larger groups.
+
+If non-nil, if a group has no more than specified number of targets, and there
 is another group which name is the prefix of the first one, move targets into
 that prefix group.
 
@@ -286,7 +296,9 @@ Has effect only if you're using `transient-compile-default-split-function'."
                  (integer :tag "Threshold")))
 
 (defcustom transient-compile-merge-dangling-groups 1
-  "If non-nil, if a group has no more than given number of targets, move
+  "Whether to merge small groups into fallback group.
+
+If non-nil, if a group has no more than given number of targets, move
 targets into fallback group.
 
 Has effect only if you're using `transient-compile-default-split-function'."
@@ -296,14 +308,18 @@ Has effect only if you're using `transient-compile-default-split-function'."
                  (integer :tag "Threshold")))
 
 (defcustom transient-compile-keychar-highlight t
-  "If non-nil, highlight key characters inside group and target names with
+  "Whether to highlight key characters in the menu.
+
+If non-nil, highlight key characters inside group and target names with
 `transient-compile-keychar' face."
   :package-version '(transient-compile . "0.1")
   :group 'transient-compile
   :type 'boolean)
 
 (defcustom transient-compile-keychar-unfold t
-  "If non-nil, allow using upcase and downcase variants of the original
+  "Whether to use upcase/downcase key characters.
+
+If non-nil, allow using upcase and downcase variants of the original
 character as the key character."
   :package-version '(transient-compile . "0.1")
   :group 'transient-compile
@@ -311,6 +327,7 @@ character as the key character."
 
 (defcustom transient-compile-keychar-regexp "[[:alnum:]]"
   "Regexp for allowed key characters.
+
 Only those characters in group and target names, which match this regex,
 can become key characters."
   :package-version '(transient-compile . "0.1")
@@ -357,7 +374,7 @@ Applied if `transient-compile-keychar-highlight' is t."
   "Function that returns menu heading.
 
 Takes 2 arguments:
-  - tool - symbol key from `transient-compile-tool-alist', e.g. 'make
+  - tool - symbol key from `transient-compile-tool-alist', e.g. \\='make
   - directory - path to dir where command will be executed
 
 Returns propertized string heading or nil to hide heading."
@@ -386,36 +403,39 @@ a break after each Nth group."
   :group 'transient-compile
   :type 'function)
 
+;; Prevent byte-compiler warning.
+(declare-function transient-compile--menu "transient-compile" t t)
+
 ;;;###autoload
 (defun transient-compile ()
   "Open transient menu for compilation.
 
 The following steps are performed:
 
- - Build tool and directory is detected. See `transient-compile-tool-alist'
+ - Build tool and directory is detected.  See `transient-compile-tool-alist'
    and `transient-compile-detect-function'.
 
  - Available targets are collected according to the `:targets' function
    of the selected tool from `transient-compile-tool-alist'.
 
- - Targets are organized into groups. See `transient-compile-group-function',
+ - Targets are organized into groups.  See `transient-compile-group-function',
    `transient-compile-split-function', `transient-compile-sort-function' and
    other related options.
 
- - For each target, a unique key sequence is assigned. See
+ - For each target, a unique key sequence is assigned.  See
    `transient-compile-keychar-function' and other related options.
 
- - Transient menu is built. See `transient-compile-menu-heading-function' and
+ - Transient menu is built.  See `transient-compile-menu-heading-function' and
    `transient-compile-menu-columns-function' for altering its appearance.
 
- - Transient menu is opened. Now we wait until selects target using its
+ - Transient menu is opened.  Now we wait until selects target using its
    key sequence, or cancels operation.
 
  - After user have selected target, compilation command is formatted using
    `:command' function of the selected tool from `transient-compile-tool-alist'.
 
  - Formatted command is padded to `compile', or `project-compile', or other
-   function. See `transient-compile-function'.
+   function.  See `transient-compile-function'.
 
 After that, `transient-compile' closes menu and returns, while the command
 keeps running in the compilation buffer."
@@ -465,7 +485,7 @@ E.g. for this file layout:
 
 it would return (make . “/foo“)
 
-In that cons, 'make defines compilation tool (a symbol key of the
+In that cons, \\='make defines compilation tool (a symbol key of the
 `transient-compile-tool-alist'), and “/foo“ defines tool-specific
 compilation directory.
 
@@ -575,7 +595,7 @@ Takes assoc list returned by `transient-compile-split-function', and returns
 sorted list.
 
 Default implementation sorts groups alphabetically and does not sort targets
-inside groups. Also it always places fallback group first."
+inside groups.  Also it always places fallback group first."
   (let ((fallback-group (assoc transient-compile-group-fallback groups)))
     (append (when fallback-group
               (list fallback-group))
@@ -585,7 +605,7 @@ inside groups. Also it always places fallback group first."
                                     (eq gr fallback-group))
                                   groups)))))
 
-(defun transient-compile-default-menu-heading-function (tool directory)
+(defun transient-compile-default-menu-heading-function (tool _directory)
   "Default implementation for `transient-compile-menu-heading-function'."
   (propertize
    (format "Choose target for tool \"%s\"" tool)
@@ -668,7 +688,7 @@ inside groups. Also it always places fallback group first."
          "-f" ,(f-join directory justfile)))
      target)))
 
-(defun transient-compile-dodofile-targets (directory)
+(defun transient-compile-dodofile-targets (_directory)
   "Get list of targets from a dodofile."
   (when-let* ((executable (transient-compile--tool-property 'doit :exe))
               (command (transient-compile--shell-join
@@ -680,7 +700,7 @@ inside groups. Also it always places fallback group first."
                (car (transient-compile--shell-tokens line)))
              lines)))
 
-(defun transient-compile-dodofile-command (directory target)
+(defun transient-compile-dodofile-command (_directory target)
   "Format build command for a dodofile."
   (when-let* ((executable (transient-compile--tool-property 'doit :exe)))
     (transient-compile--shell-join
@@ -764,6 +784,7 @@ inside groups. Also it always places fallback group first."
             (cons "LC_ALL=C" process-environment))
            (exit-code
             (process-file-shell-command command nil (current-buffer) nil)))
+      (transient-compile--log "Command finished with status %s" exit-code)
       (buffer-string))))
 
 (defun transient-compile--shell-quote (arg)
@@ -814,14 +835,14 @@ Skip nil arguments (but not empty strings)."
       (cons tool directory)
     (cond (transient-compile-tool
            (user-error
-            "No build file for '%s tool found in current directory and parents."
+            "No build file for '%s tool found in current directory and parents"
             transient-compile-tool))
           (transient-compile-directory
            (user-error
             "No known build file found in %s" transient-compile-directory))
           (t
            (user-error
-            "No known build file found in current directory and parents.")))))
+            "No known build file found in current directory and parents")))))
 
 (defun transient-compile--tool-targets (tool directory)
   "Retrieve list of compile targets."
@@ -833,14 +854,14 @@ Skip nil arguments (but not empty strings)."
         (transient-compile--log
          "Detected %s targets for \"%s\"" (length targets) tool)
         targets)
-    (user-error "Failed to parse list of targets for \"%s\" tool." tool)))
+    (user-error "Failed to parse list of targets for \"%s\" tool" tool)))
 
 (defun transient-compile--tool-command (tool directory target)
   "Format compile command."
   (if-let* ((command-fn (transient-compile--tool-property tool :command))
             (command (funcall command-fn directory target)))
       command
-    (user-error "Failed to format command for \"%s\" tool." tool)))
+    (user-error "Failed to format command for \"%s\" tool" tool)))
 
 (defun transient-compile--tool-property (tool property)
   "Get property for command."
@@ -848,9 +869,9 @@ Skip nil arguments (but not empty strings)."
             (entry-props (cdr entry)))
       (if (plist-member entry-props property)
           (plist-get entry-props property)
-        (user-error "Missing property %S for key '%S in %S."
+        (user-error "Missing property %S for key '%S in %S"
                     property tool 'transient-compile-tool-alist))
-    (user-error "Missing key '%S in %S."
+    (user-error "Missing key '%S in %S"
                 tool 'transient-compile-tool-alist)))
 
 (defun transient-compile--build-matchers ()
@@ -893,7 +914,7 @@ function that takes directory path and returns t or nil."
                               (when (f-exists-p file-path)
                                 (cons tool dir))))
                            (t
-                            (user-error "Bad property :match for key '%S in %S."
+                            (user-error "Bad property :match for key '%S in %S"
                                         tool 'transient-compile-tool-alist)))))
                       match-list))
         ;; If transient-compile-directory is forced,
@@ -989,7 +1010,7 @@ function that takes directory path and returns t or nil."
                       (seq-remove (lambda (w)
                                     (assoc w word-keys))
                                   sorted-words)))
-          (if (and (seq-contains sorted-words shared-prefix)
+          (if (and (seq-contains-p sorted-words shared-prefix)
                    (not (assoc shared-prefix word-keys)))
               ;; Special case: word = shared prefix.
               (setq word shared-prefix
@@ -1018,10 +1039,11 @@ function that takes directory path and returns t or nil."
                                          (or prefer-first
                                              (not (seq-find
                                                    (lambda (other-word)
-                                                     (and (not (string= other-word word))
-                                                          (> (length other-word) index)
-                                                          (eq (funcall casefn (elt other-word index))
-                                                              (funcall casefn (elt word index)))))
+                                                     (and
+                                                      (not (string= other-word word))
+                                                      (> (length other-word) index)
+                                                      (eq (funcall casefn (elt other-word index))
+                                                          (funcall casefn (elt word index)))))
                                                    sorted-words)))))
                                   sorted-words))
                        (setq word-index index
@@ -1096,7 +1118,7 @@ function that takes directory path and returns t or nil."
                          ,target-label
                          (lambda () ,hint (interactive)
                            (unless transient-compile-function
-                             (user-error "Missing transient-compile-function."))
+                             (user-error "Missing transient-compile-function"))
                            (let ((transient-compile-target ,target-name)
                                  (default-directory ,(if need-chdir
                                                          directory

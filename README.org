@@ -393,7 +393,7 @@ differently on your system.
       (task :match ,(lambda (directory)
                       (seq-some (lambda (f)
                                   (string-match "^[Tt]askfile\\(\\.dist\\)?\\.ya?ml$" f))
-                          (directory-files directory)))
+                                (directory-files directory)))
             :exe "task"
             :chdir t
             :targets transient-compile-taskfile-targets
@@ -424,6 +424,7 @@ differently on your system.
             :chdir t
             :targets transient-compile-makefile-targets
             :command transient-compile-makefile-command)
+      ;;
       )
 #+END_EXAMPLE
 
@@ -806,16 +807,11 @@ a break after each Nth group.
    :CUSTOM_ID: authors
    :END:
 
-Authors ordered by first contribution:
-
-#+BEGIN: om-readme-authors
-- Victor Gaydov (victor@enise.org)
-- Sergio Pastor Pérez (sergio.pastorperez@outlook.es)
-#+END:
+See [[./AUTHORS.org][here]].
 
 ** License
    :PROPERTIES:
    :CUSTOM_ID: license
    :END:
 
-[[LICENSE][GPLv3+]]
+[[./LICENSE][GPLv3+]]
