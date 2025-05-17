@@ -86,8 +86,7 @@ By default, when you select menu entry, =transient-compile-function= runs corres
 
 #+BEGIN_EXAMPLE emacs-lisp
   (custom-set-variables
-    '(transient-compile-function
-       (lambda (command) (call-interactively 'compile command)))
+    '(transient-compile-interactive t)
     )
 #+END_EXAMPLE
 
@@ -320,6 +319,30 @@ or =projectile=.
 
 *Introduced in version:*
   - 0.1
+#+END:
+
+#+BEGIN: om-readme-definition :type var :symb transient-compile-interactive
+*** transient-compile-interactive
+Whether to call compile function interactively.
+
+If non-nil, =transient-compile-function= is invoked using =call-interactively=,
+with initial minibuffer contents set to the selected target's command.
+
+If nil, =transient-compile-function= is invoked directly, with the command
+passed as an argument.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (boolean)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  nil
+#+END_EXAMPLE
+
+*Introduced in version:*
+  - 0.4
 #+END:
 
 #+BEGIN: om-readme-definition :type var :symb transient-compile-verbose

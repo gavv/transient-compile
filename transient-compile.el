@@ -64,6 +64,18 @@ or `projectile'."
                  (const :tag "project-compile" project-compile)
                  function))
 
+(defcustom transient-compile-interactive nil
+  "Whether to call compile function interactively.
+
+If non-nil, `transient-compile-function' is invoked using `call-interactively',
+with initial minibuffer contents set to the selected target's command.
+
+If nil, `transient-compile-function' is invoked directly, with the command
+passed as an argument."
+  :package-version '(transient-compile . "0.4")
+  :group 'transient-compile
+  :type 'boolean)
+
 (defcustom transient-compile-verbose nil
   "Print what's happening to messages."
   :package-version '(transient-compile . "0.1")
@@ -1120,20 +1132,16 @@ function that takes directory path and returns t or nil."
                               tool
                               directory
                               target-name))
-                            (need-chdir
-                             (transient-compile--tool-property tool :chdir))
-                            (hint
+                            (target-dir
+                             (and (transient-compile--tool-property tool :chdir)
+                                  directory))
+                            (target-hint
                              (format "Run: %s" target-command)))
                        `(,target-key
                          ,target-label
-                         (lambda () ,hint (interactive)
-                           (unless transient-compile-function
-                             (user-error "Missing transient-compile-function"))
-                           (let ((transient-compile-target ,target-name)
-                                 (default-directory ,(if need-chdir
-                                                         directory
-                                                       'default-directory)))
-                             (funcall transient-compile-function ,target-command))))))
+                         (lambda () ,target-hint (interactive)
+                           (transient-compile--invoke-target
+                            ,target-name ,target-command ,target-dir)))))
                    group-targets))))
              groups)))
 
@@ -1164,6 +1172,20 @@ function that takes directory path and returns t or nil."
                                ',(make-list column-count (/ (frame-width) column-count)))
                              grid)))
         grid))))
+
+(defun transient-compile--invoke-target (target-name target-command target-directory)
+  "Invoke compilation command for a target."
+  (unless transient-compile-function
+    (user-error "Missing transient-compile-function"))
+  (let ((transient-compile-target target-name)
+        (default-directory (or target-directory default-directory)))
+    (if transient-compile-interactive
+        (minibuffer-with-setup-hook
+                  (lambda ()
+                    (delete-minibuffer-contents)
+                    (insert target-command))
+          (call-interactively transient-compile-function))
+      (funcall transient-compile-function target-command))))
 
 (provide 'transient-compile)
 ;;; transient-compile.el ends here
