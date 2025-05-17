@@ -53,12 +53,6 @@
   :group 'processes
   :link '(url-link "https://github.com/gavv/transient-compile"))
 
-(defcustom transient-compile-spread-targets nil
-  "Whether to spread the targets so they span across the window."
-  :package-version '(transient-compile . "0.1")
-  :group 'transient-compile
-  :type 'boolean)
-
 (defcustom transient-compile-function #'compile
   "Function to run compilation command.
 
@@ -360,6 +354,16 @@ In this case default algorithm is used for this word."
   :group 'transient-compile
   :type '(choice (const :tag "Default" nil)
                  function))
+
+(defcustom transient-compile-spread-columns nil
+  "Whether to spread the columns so they span across the frame.
+
+If non-nil, columns will have spacing between them and will
+occupy the entire frame width.  Otherwise, columns will have
+the minimum width needed to fit the contents."
+  :package-version '(transient-compile . "0.4")
+  :group 'transient-compile
+  :type 'boolean)
 
 (defface transient-compile-heading
   '((t :inherit font-lock-builtin-face))
@@ -1155,11 +1159,11 @@ function that takes directory path and returns t or nil."
                                               (list :class 'transient-columns)
                                               (seq-map 'vconcat row))))
                                    rows)))
-        (if-let ((transient-compile-spread-targets transient-compile-spread-targets)
-                 (column-width (/ (frame-width) column-count)))
-            (append `(:column-widths ',(make-list column-count column-width))
-                    grid)
-          grid)))))
+        (when transient-compile-spread-columns
+          (setq grid (append `(:column-widths
+                               ',(make-list column-count (/ (frame-width) column-count)))
+                             grid)))
+        grid))))
 
 (provide 'transient-compile)
 ;;; transient-compile.el ends here
