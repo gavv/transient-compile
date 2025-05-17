@@ -355,16 +355,6 @@ In this case default algorithm is used for this word."
   :type '(choice (const :tag "Default" nil)
                  function))
 
-(defcustom transient-compile-spread-columns nil
-  "Whether to spread the columns so they span across the frame.
-
-If non-nil, columns will have spacing between them and will
-occupy the entire frame width.  Otherwise, columns will have
-the minimum width needed to fit the contents."
-  :package-version '(transient-compile . "0.4")
-  :group 'transient-compile
-  :type 'boolean)
-
 (defface transient-compile-heading
   '((t :inherit font-lock-builtin-face))
   "Face used for transient menu heading.
@@ -399,6 +389,16 @@ Used by `transient-compile-default-menu-columns-function'."
   :group 'transient-compile
   :type '(choice (const :tag "Unlimited" nil)
                  (integer :tag "Limit")))
+
+(defcustom transient-compile-menu-columns-spread nil
+  "Whether to spread the columns so they span across the frame.
+
+If non-nil, columns will have spacing between them and will
+occupy the entire frame width.  Otherwise, columns will have
+the minimum width needed to fit the contents."
+  :package-version '(transient-compile . "0.4")
+  :group 'transient-compile
+  :type 'boolean)
 
 (defcustom transient-compile-menu-columns-function
   #'transient-compile-default-menu-columns-function
@@ -1159,7 +1159,7 @@ function that takes directory path and returns t or nil."
                                               (list :class 'transient-columns)
                                               (seq-map 'vconcat row))))
                                    rows)))
-        (when transient-compile-spread-columns
+        (when transient-compile-menu-columns-spread
           (setq grid (append `(:column-widths
                                ',(make-list column-count (/ (frame-width) column-count)))
                              grid)))
