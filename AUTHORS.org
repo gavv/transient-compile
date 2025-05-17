@@ -1,6 +1,6 @@
 * Authors
 
-project-headerline authors, ordered by first contribution:
+transient-compile authors, ordered by first contribution:
 
 #+BEGIN: om-readme-authors :forge github :append yes
 - Victor Gaydov =gavv= (victor@enise.org)

@@ -165,30 +165,30 @@ Open transient menu for compilation.
 
 The following steps are performed:
 
- - Build tool and directory is detected. See =transient-compile-tool-alist=
+ - Build tool and directory is detected.  See =transient-compile-tool-alist=
    and =transient-compile-detect-function=.
 
  - Available targets are collected according to the =:targets= function
    of the selected tool from =transient-compile-tool-alist=.
 
- - Targets are organized into groups. See =transient-compile-group-function=,
+ - Targets are organized into groups.  See =transient-compile-group-function=,
    =transient-compile-split-function=, =transient-compile-sort-function= and
    other related options.
 
- - For each target, a unique key sequence is assigned. See
+ - For each target, a unique key sequence is assigned.  See
    =transient-compile-keychar-function= and other related options.
 
- - Transient menu is built. See =transient-compile-menu-heading-function= and
+ - Transient menu is built.  See =transient-compile-menu-heading-function= and
    =transient-compile-menu-columns-function= for altering its appearance.
 
- - Transient menu is opened. Now we wait until selects target using its
+ - Transient menu is opened.  Now we wait until selects target using its
    key sequence, or cancels operation.
 
  - After user have selected target, compilation command is formatted using
    =:command= function of the selected tool from =transient-compile-tool-alist=.
 
  - Formatted command is padded to =compile=, or =project-compile=, or other
-   function. See =transient-compile-function=.
+   function.  See =transient-compile-function=.
 
 After that, =transient-compile= closes menu and returns, while the command
 keeps running in the compilation buffer.
@@ -378,8 +378,8 @@ path as an argument (e.g. where Makefile is located in case of =make=), and
 returns the list of string names of the available targets.
 
 The =:command= property defines a function that takes two arguments: the
-matched directory and the target name. It returns a string with the command
-to run. The command is then passed to =compile= (or other function, as
+matched directory and the target name.  It returns a string with the command
+to run.  The command is then passed to =compile= (or other function, as
 defined by =transient-compile-function=).
 
 =:exe= and =:chdir= properties are used by the default implementations of
@@ -515,7 +515,9 @@ Used by =transient-compile-default-group-function=.
 
 #+BEGIN: om-readme-definition :type var :symb transient-compile-group-function
 *** transient-compile-group-function
-Function that takes target name and returns group name.
+Function to determine target's group.
+
+Takes target name and returns group name.
 If it returns nil, fallback group is used (=transient-compile-group-fallback=).
 
 Default implementation uses =transient-compile-group-regexp=.
@@ -536,7 +538,9 @@ Default implementation uses =transient-compile-group-regexp=.
 
 #+BEGIN: om-readme-definition :type var :symb transient-compile-split-function
 *** transient-compile-split-function
-Function that takes list of targets names and returns assoc list, where key is
+Function to divide targets into groups.
+
+Takes list of targets names and returns assoc list, where key is
 group name, and value is list of target names in this group.
 
 Default implementation uses =transient-compile-group-function= with some
@@ -564,13 +568,15 @@ custom groupping logic that takes into account all available targets.
 
 #+BEGIN: om-readme-definition :type var :symb transient-compile-sort-function
 *** transient-compile-sort-function
-Function that takes assoc list returned by =transient-compile-split-function=,
+Function to sort groups and targets inside groups.
+
+Takes assoc list returned by =transient-compile-split-function=,
 and returns its sorted version.
 
 The function is allowed to sort both groups and targets inside groups.
 
-Default implementation sorts groups alphabetically, does not sort targets, and places
-fallback group first.
+Default implementation sorts groups alphabetically, does not sort targets,
+and places fallback group first.
 
 *Variable type:*
 #+BEGIN_EXAMPLE
@@ -588,6 +594,8 @@ fallback group first.
 
 #+BEGIN: om-readme-definition :type var :symb transient-compile-merge-prefix-targets
 *** transient-compile-merge-prefix-targets
+Whether to merge group-less targets into larger groups.
+
 If non-nil, if a target doesn't have a group, and target name is a prefix
 of a group name, move target into that group.
 
@@ -609,6 +617,8 @@ Has effect only if you're using =transient-compile-default-split-function=.
 
 #+BEGIN: om-readme-definition :type var :symb transient-compile-merge-prefix-groups
 *** transient-compile-merge-prefix-groups
+Whether to merge small groups into larger groups.
+
 If non-nil, if a group has no more than specified number of targets, and there
 is another group which name is the prefix of the first one, move targets into
 that prefix group.
@@ -633,6 +643,8 @@ Has effect only if you're using =transient-compile-default-split-function=.
 
 #+BEGIN: om-readme-definition :type var :symb transient-compile-merge-dangling-groups
 *** transient-compile-merge-dangling-groups
+Whether to merge small groups into fallback group.
+
 If non-nil, if a group has no more than given number of targets, move
 targets into fallback group.
 
@@ -656,6 +668,8 @@ Has effect only if you're using =transient-compile-default-split-function=.
 
 #+BEGIN: om-readme-definition :type var :symb transient-compile-keychar-highlight
 *** transient-compile-keychar-highlight
+Whether to highlight key characters in the menu.
+
 If non-nil, highlight key characters inside group and target names with
 =transient-compile-keychar= face.
 
@@ -675,6 +689,8 @@ If non-nil, highlight key characters inside group and target names with
 
 #+BEGIN: om-readme-definition :type var :symb transient-compile-keychar-unfold
 *** transient-compile-keychar-unfold
+Whether to use upcase/downcase key characters.
+
 If non-nil, allow using upcase and downcase variants of the original
 character as the key character.
 
@@ -695,6 +711,7 @@ character as the key character.
 #+BEGIN: om-readme-definition :type var :symb transient-compile-keychar-regexp
 *** transient-compile-keychar-regexp
 Regexp for allowed key characters.
+
 Only those characters in group and target names, which match this regex,
 can become key characters.
 
@@ -789,6 +806,28 @@ Used by =transient-compile-default-menu-columns-function=.
 
 *Introduced in version:*
   - 0.1
+#+END:
+
+#+BEGIN: om-readme-definition :type var :symb transient-compile-menu-columns-spread
+*** transient-compile-menu-columns-spread
+Whether to spread the columns so they span across the frame.
+
+If non-nil, columns will have spacing between them and will
+occupy the entire frame width.  Otherwise, columns will have
+the minimum width needed to fit the contents.
+
+*Variable type:*
+#+BEGIN_EXAMPLE
+  (boolean)
+#+END_EXAMPLE
+
+*Default value:*
+#+BEGIN_EXAMPLE
+  nil
+#+END_EXAMPLE
+
+*Introduced in version:*
+  - 0.4
 #+END:
 
 #+BEGIN: om-readme-definition :type var :symb transient-compile-menu-columns-function
